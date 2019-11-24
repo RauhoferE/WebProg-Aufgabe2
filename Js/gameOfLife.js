@@ -4,48 +4,85 @@ class cgolpitch extends HTMLElement {
      */
     constructor() {
         super();
-        this.width = 10;
-        this.height = 10;
         console.log("cgol initialised");
     }
+    static get observedAttributes() { return ["width", "height"]; }
     connectedCallback() {
+        this.width = +this.getAttribute('width');
+        this.height = +this.getAttribute('height');
+        console.log(this.width);
+        console.log(this.height);
         this.attachShadow({ mode: 'open' });
         //TODO: button clicked wird in shadow dom nicht erkannt
-        this.shadowRoot.innerHTML = `
-        <div>
-            <button id="one">
-            &#x1F44C
-            </button>
-            <button id="two" >
-            &#x1F44D
-            </button>
-            <button id="three" >
-            &#x1F44E
-            </button>
-        </div>
-        `;
+        this.createGrid();
     }
     disconnectedCallback() {
+        console.log("Disconnected");
     }
     attributeChangedCallback(attrName, oldVal, newVal) {
+        console.log("callback");
+        if (newVal === null) {
+            return;
+        }
+        if (attrName === 'width') {
+            this.widthProp = +newVal;
+        }
+        else if (attrName === 'height') {
+            this.heightProp = +newVal;
+        }
+    }
+    createGrid() {
+        this.shadowRoot.innerHTML = `
+        <style>
+        .dead{
+            background: white;
+            width: 1vw;
+            height: 1vw;
+            border: 0.05vw;
+            border-color: grey;
+            float: left;
+            color: white;
+            border-style: solid;
+        }
+        .alive{
+            background: blue;
+            width: 1vw;
+            height: 1vw;
+            border: 1vw;
+        }
+        </style>
+        `;
+        for (let index = 0; index < this.height; index++) {
+            var row = document.createElement("div");
+            for (let j = 0; j < this.width; j++) {
+                var temp = document.createElement("div");
+                temp.setAttribute("class", "dead");
+                row.appendChild(temp);
+            }
+            this.shadowRoot.appendChild(row);
+        }
     }
     get widthProp() {
         return this.width;
     }
     set widthProp(width) {
         if (width < 10) {
-            throw new Error();
+            throw new Error("Error value has to be atleast 10");
         }
         this.width = width;
+        this.createGrid();
+        console.log("Width changed to " + this.width);
     }
     get heightProp() {
         return this.height;
     }
     set heightProp(height) {
         if (height < 10) {
-            throw new Error();
+            throw new Error("Error value has to be atleast 10");
         }
+        this.createGrid();
         this.width = height;
+        console.log("Height changed to " + this.height);
     }
 }
 ;
@@ -59,6 +96,7 @@ class cell {
         this.rightNeighbor = null;
         this.upNeighbor = null;
         this.isAlive = false;
+        this.wasAliveAtSomePoint = false;
     }
 }
 window.customElements.define('cgol-pitch', cgolpitch);
