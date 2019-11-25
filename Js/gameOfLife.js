@@ -10,10 +10,10 @@ class cgolpitch extends HTMLElement {
     connectedCallback() {
         this.width = +this.getAttribute('width');
         this.height = +this.getAttribute('height');
+        this.isRunning = false;
         console.log(this.width);
         console.log(this.height);
         this.attachShadow({ mode: 'open' });
-        //TODO: button clicked wird in shadow dom nicht erkannt
         this.createGrid();
     }
     disconnectedCallback() {
@@ -32,12 +32,14 @@ class cgolpitch extends HTMLElement {
         }
     }
     createGrid() {
+        var widthAndHeight = 80 / this.width;
+        console.log(widthAndHeight);
         this.shadowRoot.innerHTML = `
         <style>
         .dead{
             background: white;
-            width: 1vw;
-            height: 1vw;
+            width: ${widthAndHeight}vw;
+            height: ${widthAndHeight}vw;
             border: 0.05vw;
             border-color: grey;
             float: left;
@@ -46,21 +48,59 @@ class cgolpitch extends HTMLElement {
         }
         .alive{
             background: blue;
-            width: 1vw;
-            height: 1vw;
-            border: 1vw;
+            width: ${widthAndHeight}vw;
+            height: ${widthAndHeight}vw;
+            border: 0.05vw;
+            border-color: grey;
+            float: left;
+            color: white;
+            border-style: solid;
+        }
+        .container{
+            margin-left:10vw;
+            margin-right: 10vw;
         }
         </style>
         `;
-        for (let index = 0; index < this.height; index++) {
-            var row = document.createElement("div");
-            for (let j = 0; j < this.width; j++) {
+        this.cells = this.Create2DArray(this.height, this.width);
+        var container = document.createElement("div");
+        container.className = ("container");
+        for (let index = 1; index <= this.height; index++) {
+            for (let j = 1; j <= this.width; j++) {
                 var temp = document.createElement("div");
+                temp.setAttribute("id", (index).toString());
+                temp.setAttribute("id2", (j).toString());
                 temp.setAttribute("class", "dead");
-                row.appendChild(temp);
+                this.cells[index - 1][j - 1] = false;
+                temp.addEventListener("mouseover", function (event) {
+                    var t = event.target;
+                    t.setAttribute("class", "alive");
+                    //TODO: Geht nicht kann keine objekte von innerhalb rufen!!!!!!!!!!!!!!!!!!!!!
+                    var root = t.parentElement;
+                    root.cells[+t.getAttribute("id") - 1][+t.getAttribute("id2") - 1] = true;
+                    console.log(t.id);
+                });
+                container.appendChild(temp);
             }
-            this.shadowRoot.appendChild(row);
         }
+        this.shadowRoot.appendChild(container);
+    }
+    Create2DArray(height, width) {
+        var arr = new Array(height);
+        for (var i = 0; i < height; i++) {
+            arr[i] = new Array(width);
+        }
+        return arr;
+    }
+    start() {
+        while (this.isRunning) {
+        }
+    }
+    get cells() {
+        return this._cells;
+    }
+    set cells(value) {
+        this._cells = value;
     }
     get widthProp() {
         return this.width;
