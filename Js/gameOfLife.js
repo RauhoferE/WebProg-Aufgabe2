@@ -34,6 +34,7 @@ class cgolpitch extends HTMLElement {
     createGrid() {
         var widthAndHeight = 80 / this.width;
         console.log(widthAndHeight);
+        var newWidth = widthAndHeight * this.width;
         this.shadowRoot.innerHTML = `
         <style>
         .dead{
@@ -59,6 +60,7 @@ class cgolpitch extends HTMLElement {
         .container{
             margin-left:10vw;
             margin-right: 10vw;
+            width: ${newWidth}vw;
         }
         </style>
         `;

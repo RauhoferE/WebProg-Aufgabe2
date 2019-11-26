@@ -45,6 +45,7 @@ class cgolpitch extends HTMLElement{
     public createGrid(){
         var widthAndHeight = 80 / this.width;
         console.log(widthAndHeight);
+        var newWidth=widthAndHeight * this.width;
         this.shadowRoot.innerHTML = `
         <style>
         .dead{
@@ -70,11 +71,13 @@ class cgolpitch extends HTMLElement{
         .container{
             margin-left:10vw;
             margin-right: 10vw;
+            width: ${newWidth}vw;
         }
         </style>
         `
         ;
         this.cells = this.Create2DArray(this.height, this.width);
+
         var container = document.createElement("div");
         container.className = ("container");
         for (let index = 1; index <= this.height; index++) {
@@ -97,7 +100,7 @@ class cgolpitch extends HTMLElement{
         }
         this.shadowRoot.appendChild(container);
     }
-    
+
     public Create2DArray(height, width) {
         var arr = new Array(height);
       
