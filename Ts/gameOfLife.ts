@@ -3,7 +3,7 @@ class cgolpitch extends HTMLElement{
     private width: number;
     private height: number;
     private isRunning: boolean;
-    private _cells: boolean[];
+    private _cells: boolean[][];
 
     public static get observedAttributes() { return ["width", "height"]; }
     /**
@@ -88,6 +88,7 @@ class cgolpitch extends HTMLElement{
                 temp.setAttribute("class", "dead");
                 this.cells[index - 1][j - 1] = false;
                 temp.addEventListener("mouseover", function(event){
+                    //TODO Variable außerhalb von klasse definieren
                     var t = event.target as Element;
                     t.setAttribute("class", "alive");
                     //TODO: Geht nicht kann keine objekte von innerhalb rufen!!!!!!!!!!!!!!!!!!!!!
@@ -117,10 +118,10 @@ class cgolpitch extends HTMLElement{
         }
     }
 
-    public get cells(): boolean[] {
+    public get cells(): boolean[][] {
         return this._cells;
     }
-    public set cells(value: boolean[]) {
+    public set cells(value: boolean[][]) {
         this._cells = value;
     }
 
