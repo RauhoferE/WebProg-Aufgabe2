@@ -1,9 +1,7 @@
-
-class cgolpitch extends HTMLElement{
+class Cgolpitch extends HTMLElement {
     private width: number;
     private height: number;
-    private isRunning: boolean;
-    private _cells: boolean[][];
+    private cells1: number[][];
 
     public static get observedAttributes() { return ["width", "height"]; }
     /**
@@ -14,122 +12,93 @@ class cgolpitch extends HTMLElement{
         console.log("cgol initialised");
     }
 
-    connectedCallback(){
-        this.width = +this.getAttribute('width');
-        this.height = +this.getAttribute('height');
-        this.isRunning = false;
+    public connectedCallback(): void {
+        this.width = +this.getAttribute("width");
+        this.height = +this.getAttribute("height");
         console.log(this.width);
         console.log(this.height);
-        this.attachShadow({mode:'open'});
+        this.attachShadow({mode: 'open'});
+        this.shadowRoot.innerHTML = `
+        <style>
+        </style>
+        `
+        ;
+        console.log(this.shadowRoot.innerHTML);
+        
         this.createGrid();
     }
 
-    disconnectedCallback() {
+    public disconnectedCallback(): void {
         console.log("Disconnected");
-        
     }
-    attributeChangedCallback(attrName : string, oldVal : string, newVal : string) {
-        console.log("callback");
-        if (newVal === null) {
+    public attributeChangedCallback(attrName: string, oldVal: string, newVal: string): void {
+        console.log("callback" + newVal);
+        if (newVal === "") {
+            console.log("null");
+
             return;
         }
 
-      if (attrName === 'width') {
+        if (attrName === "width") {
           this.widthProp = +newVal;
-      }
-      else if (attrName === 'height') {
+      } else if (attrName === "height") {
           this.heightProp = +newVal;
       }
     }
 
-    public createGrid(){
-        var widthAndHeight = 80 / this.width;
-        console.log(widthAndHeight);
-        var newWidth=widthAndHeight * this.width;
-        this.shadowRoot.innerHTML = `
-        <style>
-        .dead{
-            background: white;
-            width: ${widthAndHeight}vw;
-            height: ${widthAndHeight}vw;
-            border: 0.05vw;
-            border-color: grey;
-            float: left;
-            color: white;
-            border-style: solid;
-        }
-        .alive{
-            background: blue;
-            width: ${widthAndHeight}vw;
-            height: ${widthAndHeight}vw;
-            border: 0.05vw;
-            border-color: grey;
-            float: left;
-            color: white;
-            border-style: solid;
-        }
-        .container{
-            margin-left:10vw;
-            margin-right: 10vw;
-            width: ${newWidth}vw;
-        }
-        </style>
-        `
-        ;
-        this.cells = this.Create2DArray(this.height, this.width);
+    public createGrid() {
 
-        var container = document.createElement("div");
-        container.className = ("container");
-        for (let index = 1; index <= this.height; index++) {
-            for (let j = 1; j <= this.width; j++) {
-                var temp = document.createElement("div");
-                temp.setAttribute("id", (index).toString());
-                temp.setAttribute("id2", (j).toString());
-                temp.setAttribute("class", "dead");
-                this.cells[index - 1][j - 1] = false;
-                temp.addEventListener("mouseover", function(event){
-                    //TODO Variable außerhalb von klasse definieren
-                    var t = event.target as Element;
-                    t.setAttribute("class", "alive");
-                    //TODO: Geht nicht kann keine objekte von innerhalb rufen!!!!!!!!!!!!!!!!!!!!!
-                    var root = <cgolpitch>t.parentElement;
-                    root.cells[+t.getAttribute("id") - 1][+t.getAttribute("id2") - 1] = true;
+        this.cells = this.Create2DArray(this.height, this.width);
+        const windoWidth = window.innerWidth;
+        const windowHeight = window.innerHeight;
+        const cellWidth = windoWidth / this.width;
+        const cellHeight = windowHeight / this.height;
+
+        const container = document.createElement("div");
+        for (let index = 0; index < this.height; index++) {
+            for (let j = 0; j < this.width; j++) {
+                const temp = document.createElement("div");
+                temp.style.width = cellWidth.toString();
+                temp.style.height = cellHeight.toString();
+                temp.style.marginLeft = (j * cellWidth).toString();
+                temp.style.marginTop = (index * cellHeight).toString();
+                this.cells[index][j] = 0;
+                temp.addEventListener("mouseover", function(event) {
+                    // TODO Variable außerhalb von klasse definieren
+                    let t = event.target as Element;
+                    // TODO: Geht nicht kann keine objekte von innerhalb rufen!!!!!!!!!!!!!!!!!!!!!
                     console.log(t.id);
                 });
                 container.appendChild(temp);
             }
         }
+        this.attachShadow({mode: 'open'});
+
         this.shadowRoot.appendChild(container);
     }
 
-    public Create2DArray(height, width) {
-        var arr = new Array(height);
-      
-        for (var i=0;i<height;i++) {
+    public Create2DArray(height: number, width: number): number[][] {
+        const arr = new Array(height);
+
+        for (let i = 0; i < height; i++) {
            arr[i] = new Array(width);
         }
-      
+
         return arr;
-      }
-
-    public start(){
-        while (this.isRunning) {
-            
-        }
     }
 
-    public get cells(): boolean[][] {
-        return this._cells;
+    public get cells(): number[][] {
+        return this.cells1;
     }
-    public set cells(value: boolean[][]) {
-        this._cells = value;
+    public set cells(value: number[][]) {
+        this.cells1 = value;
     }
 
-    public get widthProp() : number{
+    public get widthProp(): number {
         return this.width;
     }
 
-    public set widthProp(width : number){
+    public set widthProp(width: number) {
         if (width < 10) {
             throw new Error("Error value has to be atleast 10");
             }
@@ -138,12 +107,12 @@ class cgolpitch extends HTMLElement{
         this.createGrid();
         console.log("Width changed to " + this.width);
     }
-   
-    public get heightProp() : number{
+
+    public get heightProp(): number {
         return this.height;
     }
 
-    public set heightProp(height : number){
+    public set heightProp(height: number) {
         if (height < 10) {
             throw new Error("Error value has to be atleast 10");
         }
@@ -152,29 +121,6 @@ class cgolpitch extends HTMLElement{
         this.width = height;
         console.log("Height changed to " + this.height);
     }
-};
-
-class cell{
-    upNeighbor : cell;
-    downNeighbor : cell;
-    leftNeighbor : cell;
-    rightNeighbor : cell;
-    isAlive : boolean;
-    wasAliveAtSomePoint : boolean;
-
-    /**
-     *
-     */
-    constructor(leftNeighbor) {
-        this.leftNeighbor = leftNeighbor;
-        this.downNeighbor = null;
-        this.rightNeighbor = null;
-        this.upNeighbor = null;
-        this.isAlive = false;
-        this.wasAliveAtSomePoint = false;
-    }
-
-
 }
-window.customElements.define('cgol-pitch', cgolpitch);
- 
+
+window.customElements.define("cgol-pitch", Cgolpitch);
