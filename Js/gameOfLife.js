@@ -17,7 +17,6 @@ class Cgolpitch extends HTMLElement {
         <style>
         </style>
         `;
-        console.log(this.shadowRoot.innerHTML);
         this.createGrid();
     }
     disconnectedCallback() {
@@ -60,7 +59,7 @@ class Cgolpitch extends HTMLElement {
                 container.appendChild(temp);
             }
         }
-        this.attachShadow({ mode: 'open' });
+        console.log(this.shadowRoot);
         this.shadowRoot.appendChild(container);
     }
     Create2DArray(height, width) {

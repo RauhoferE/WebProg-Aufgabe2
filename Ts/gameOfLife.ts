@@ -23,8 +23,6 @@ class Cgolpitch extends HTMLElement {
         </style>
         `
         ;
-        console.log(this.shadowRoot.innerHTML);
-        
         this.createGrid();
     }
 
@@ -72,8 +70,9 @@ class Cgolpitch extends HTMLElement {
                 container.appendChild(temp);
             }
         }
-        this.attachShadow({mode: 'open'});
 
+        console.log(this.shadowRoot);
+        
         this.shadowRoot.appendChild(container);
     }
 
