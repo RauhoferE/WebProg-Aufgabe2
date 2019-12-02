@@ -1,0 +1,25 @@
+{
+  "name": "webprog-aufgabe2",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "dependencies": {
+    "ts-lint": "^4.5.1",
+    "tslint": "^5.20.1",
+    "typescript": "^3.7.2"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/RauhoferE/WebProg-Aufgabe2.git"
+  },
+  "author": "Emre Rauhofer",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/RauhoferE/WebProg-Aufgabe2/issues"
+  },
+  "homepage": "https://github.com/RauhoferE/WebProg-Aufgabe2#readme"
+}
