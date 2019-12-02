@@ -4,6 +4,7 @@ class Cgolpitch extends HTMLElement {
      */
     constructor() {
         super();
+        this.attachShadow({ mode: 'open' });
         console.log("cgol initialised");
     }
     static get observedAttributes() { return ["width", "height"]; }
@@ -12,11 +13,9 @@ class Cgolpitch extends HTMLElement {
         this.height = +this.getAttribute("height");
         console.log(this.width);
         console.log(this.height);
-        this.attachShadow({ mode: 'open' });
-        this.shadowRoot.innerHTML = `
-        <style>
-        </style>
-        `;
+        // this.shadowRoot.innerHTML = `
+        // `
+        // ;
         this.createGrid();
     }
     disconnectedCallback() {
@@ -41,25 +40,27 @@ class Cgolpitch extends HTMLElement {
         const windowHeight = window.innerHeight;
         const cellWidth = windoWidth / this.width;
         const cellHeight = windowHeight / this.height;
+        console.log(windoWidth);
+        console.log(windowHeight);
         const container = document.createElement("div");
         for (let index = 0; index < this.height; index++) {
             for (let j = 0; j < this.width; j++) {
-                const temp = document.createElement("div");
-                temp.style.width = cellWidth.toString();
+                let temp = document.createElement("div");
+                temp.style.width = cellWidth.toString() + " px";
                 temp.style.height = cellHeight.toString();
                 temp.style.marginLeft = (j * cellWidth).toString();
                 temp.style.marginTop = (index * cellHeight).toString();
+                temp.style.border = "thick solid #0000FF";
                 this.cells[index][j] = 0;
-                temp.addEventListener("mouseover", function (event) {
-                    // TODO Variable außerhalb von klasse definieren
-                    let t = event.target;
-                    // TODO: Geht nicht kann keine objekte von innerhalb rufen!!!!!!!!!!!!!!!!!!!!!
-                    console.log(t.id);
-                });
+                // temp.addEventListener("mouseover", function(event) {
+                //     // TODO Variable außerhalb von klasse definieren
+                //     let t = event.target as Element;
+                //     // TODO: Geht nicht kann keine objekte von innerhalb rufen!!!!!!!!!!!!!!!!!!!!!
+                //     console.log(t.id);
+                // });
                 container.appendChild(temp);
             }
         }
-        console.log(this.shadowRoot);
         this.shadowRoot.appendChild(container);
     }
     Create2DArray(height, width) {
@@ -80,7 +81,7 @@ class Cgolpitch extends HTMLElement {
     }
     set widthProp(width) {
         if (width < 10) {
-            throw new Error("Error value has to be atleast 10");
+            // throw new Error("Error value has to be atleast 10");
         }
         this.width = width;
         this.createGrid();
@@ -91,7 +92,7 @@ class Cgolpitch extends HTMLElement {
     }
     set heightProp(height) {
         if (height < 10) {
-            throw new Error("Error value has to be atleast 10");
+            //throw new Error("Error value has to be atleast 10");
         }
         this.createGrid();
         this.width = height;
