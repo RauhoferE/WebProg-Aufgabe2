@@ -5,6 +5,7 @@ class Cgolpitch extends HTMLElement {
     constructor() {
         super();
         this.attachShadow({ mode: 'open' });
+        this.mouseOverDiv = this.mouseOverDiv.bind(this);
         console.log("cgol initialised");
     }
     static get observedAttributes() { return ["width", "height"]; }
@@ -13,9 +14,15 @@ class Cgolpitch extends HTMLElement {
         this.height = +this.getAttribute("height");
         console.log(this.width);
         console.log(this.height);
-        // this.shadowRoot.innerHTML = `
-        // `
-        // ;
+        this.shadowRoot.innerHTML = `
+        <style>
+            #field{
+                display: grid;
+            }
+        </style>
+        <div id="field">
+        </div>
+        `;
         this.createGrid();
     }
     disconnectedCallback() {
@@ -36,32 +43,34 @@ class Cgolpitch extends HTMLElement {
     }
     createGrid() {
         this.cells = this.Create2DArray(this.height, this.width);
-        const windoWidth = window.innerWidth;
+        const windoWidth = window.innerWidth - 20;
         const windowHeight = window.innerHeight;
         const cellWidth = windoWidth / this.width;
-        const cellHeight = windowHeight / this.height;
-        console.log(windoWidth);
-        console.log(windowHeight);
-        const container = document.createElement("div");
+        const container = this.shadowRoot.getElementById("field");
+        container.style.gridTemplateColumns = `repeat(${this.width}, ${cellWidth}px)`;
+        container.style.gridTemplateRows = `repeat(${this.height}, ${cellWidth}px)`;
+        container.style.width = windoWidth.toString() + "px";
+        container.style.width = windowHeight.toString() + "px";
         for (let index = 0; index < this.height; index++) {
             for (let j = 0; j < this.width; j++) {
-                let temp = document.createElement("div");
-                temp.style.width = cellWidth.toString() + " px";
-                temp.style.height = cellHeight.toString();
-                temp.style.marginLeft = (j * cellWidth).toString();
-                temp.style.marginTop = (index * cellHeight).toString();
-                temp.style.border = "thick solid #0000FF";
+                const temp = document.createElement("div");
+                temp.style.border = "1px solid #0000FF";
+                temp.style.width = "100%";
+                temp.style.height = "100%";
+                temp.setAttribute("PosY", index.toString());
+                temp.setAttribute("PosX", j.toString());
                 this.cells[index][j] = 0;
-                // temp.addEventListener("mouseover", function(event) {
-                //     // TODO Variable außerhalb von klasse definieren
-                //     let t = event.target as Element;
-                //     // TODO: Geht nicht kann keine objekte von innerhalb rufen!!!!!!!!!!!!!!!!!!!!!
-                //     console.log(t.id);
-                // });
+                temp.addEventListener("mouseover", this.mouseOverDiv);
                 container.appendChild(temp);
             }
         }
-        this.shadowRoot.appendChild(container);
+    }
+    mouseOverDiv(e) {
+        let t = e.target;
+        let x = t.getAttribute("PosX");
+        let y = t.getAttribute("PosY");
+        t.style.backgroundColor = "black";
+        console.log(t.id);
     }
     Create2DArray(height, width) {
         const arr = new Array(height);
