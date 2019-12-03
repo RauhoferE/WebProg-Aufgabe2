@@ -62,6 +62,12 @@ class Cgolpitch extends HTMLElement {
         container.style.gridTemplateRows = `repeat(${this.height}, ${cellWidth}px)`;
         container.style.width = windoWidth.toString() + "px";
         container.style.width = windowHeight.toString() + "px";
+
+        // Delete all childs from container
+        while (container.firstChild != null) {
+            container.removeChild(container.firstChild);
+        }
+
         for (let index = 0; index < this.height; index++) {
             for (let j = 0; j < this.width; j++) {
                 const temp = document.createElement("div");
@@ -71,7 +77,7 @@ class Cgolpitch extends HTMLElement {
                 temp.setAttribute("PosY", index.toString());
                 temp.setAttribute("PosX", j.toString());
                 this.cells[index][j] = 0;
-                temp.addEventListener("mouseover", this.mouseOverDiv);
+                temp.addEventListener("click", this.mouseOverDiv);
                 container.appendChild(temp);
             }
         }
@@ -81,7 +87,9 @@ class Cgolpitch extends HTMLElement {
         let t = e.target as HTMLElement;
         let x = t.getAttribute("PosX");
         let y = t.getAttribute("PosY");
-        t.style.backgroundColor = "black";
+        t.style.backgroundColor = "black";        
+        //Checken ob zelle schon tot oder lebendig ist
+        this.cells[Number(y)][Number(x)] = 1;
         console.log(t.id);
     }
 
