@@ -11,6 +11,8 @@ class Cgolpitch extends HTMLElement {
         this.startGame = this.startGame.bind(this);
         this.pauseGame = this.pauseGame.bind(this);
         this.clearGame = this.clearGame.bind(this);
+        this.setWidth = this.setWidth.bind(this);
+        this.setHeight = this.setHeight.bind(this);
         this.gameLoop = this.gameLoop.bind(this);
         window.addEventListener("resize", this.onResizeEvent);
         this.generationCount = 0;
@@ -31,14 +33,31 @@ class Cgolpitch extends HTMLElement {
                 display: grid;
             }
         </style>
+        <div style="margin:20px;">
         <div id="field"></div>
         <button id="start">Start</button>
         <button id="stop">Stop</button>
         <button id="clear">Clear</button>
+        <span>Generation: </span>
+        <span id="count">0</span>
+        <div style="margin-top:10px;float: right;position: relative;">
+        <span>Width: </span>
+        <textarea id="width"></textarea>
+        <span>Height: </span>
+        <textarea id="height" ></textarea>
+        <span>Level: </span>
+        <textarea id="level" cols="${this.width}"></textarea>
+        </div>
+        <button id="loadlevel">Load Level</button>
+        </div>
         `;
         this.shadowRoot.getElementById("start").addEventListener("click", this.startGame);
         this.shadowRoot.getElementById("stop").addEventListener("click", this.pauseGame);
         this.shadowRoot.getElementById("clear").addEventListener("click", this.clearGame);
+        this.shadowRoot.getElementById("width").addEventListener("change", this.setWidth);
+        this.shadowRoot.getElementById("height").addEventListener("change", this.setHeight);
+        this.shadowRoot.getElementById("width").innerText = String(this.width);
+        this.shadowRoot.getElementById("height").innerText = String(this.height);
         this.createGrid();
     }
     // This method is called when the website has been disconnected.
@@ -59,7 +78,7 @@ class Cgolpitch extends HTMLElement {
         }
     }
     startGame() {
-        this.interv = setInterval(this.gameLoop, 500);
+        this.interv = setInterval(this.gameLoop, 100);
     }
     pauseGame() {
         clearInterval(this.interv);
@@ -67,6 +86,7 @@ class Cgolpitch extends HTMLElement {
     clearGame() {
         clearInterval(this.interv);
         this.generationCount = 0;
+        this.setGenerationCount(this.generationCount);
         this.createGrid();
     }
     loadLevel() {
@@ -74,7 +94,7 @@ class Cgolpitch extends HTMLElement {
     }
     onResizeEvent() {
         console.log("resize");
-        this.createGrid();
+        this.resizeGrid();
         return;
     }
     // This method creates a dom grid.
@@ -108,6 +128,22 @@ class Cgolpitch extends HTMLElement {
         }
         this.init = true;
     }
+    setWidth(event) {
+        const t = event.target;
+        if (isNaN(Number(t.value))) {
+            alert("Please put in a number for the width.");
+            return;
+        }
+        this.widthProp = Number(t.value);
+    }
+    setHeight(event) {
+        const t = event.target;
+        if (isNaN(Number(t.value))) {
+            alert("Please put in a number for the height.");
+            return;
+        }
+        this.heightProp = Number(t.value);
+    }
     resizeGrid() {
         const windoWidth = window.innerWidth - 20;
         const windowHeight = window.innerHeight;
@@ -136,7 +172,7 @@ class Cgolpitch extends HTMLElement {
                     temp.style.backgroundColor = "black";
                 }
                 else {
-                    temp.style.backgroundColor = "greem";
+                    temp.style.backgroundColor = "green";
                 }
                 temp.addEventListener("click", this.mouseOverDiv);
                 container.appendChild(temp);
@@ -157,7 +193,10 @@ class Cgolpitch extends HTMLElement {
             this.cells[Number(y)][Number(x)] = 0;
             t.style.backgroundColor = "white";
         }
-        console.log(t.id);
+        console.log(y + " " + x);
+    }
+    setGenerationCount(num) {
+        this.shadowRoot.getElementById("count").innerText = String(this.generationCount);
     }
     // The main game loop.
     gameLoop() {
@@ -208,6 +247,18 @@ class Cgolpitch extends HTMLElement {
                 else {
                     upperRight = this.cells1[index - 1][j + 1];
                 }
+                if (index + 1 > this.cells1.length - 1 && j + 1 > this.cells1[index].length - 1) {
+                    downerRight = this.cells1[0][0];
+                }
+                else if (index + 1 > this.cells1.length - 1) {
+                    downerRight = this.cells1[0][j + 1];
+                }
+                else if (j + 1 > this.cells1[index].length - 1) {
+                    downerRight = this.cells1[index + 1][0];
+                }
+                else {
+                    downerRight = this.cells1[index + 1][j + 1];
+                }
                 // Downer Right
                 if (index - 1 < 0) {
                     upperNeighbour = this.cells1[this.cells1.length - 1][j];
@@ -233,18 +284,15 @@ class Cgolpitch extends HTMLElement {
                 else {
                     rightNeighbour = this.cells1[index][j + 1];
                 }
-                if (upperNeighbour === 1) {
-                    liveCellCount++;
-                }
-                if (downerNeighbour === 1) {
-                    liveCellCount++;
-                }
-                if (leftNeighbour === 1) {
-                    liveCellCount++;
-                }
-                if (rightNeighbour === 1) {
-                    liveCellCount++;
-                }
+                let arrayNeighbour;
+                arrayNeighbour = [upperNeighbour, downerNeighbour,
+                    leftNeighbour, rightNeighbour, upperLeft, upperRight,
+                    downerRight, downerLeft];
+                arrayNeighbour.forEach(element => {
+                    if (element === 1) {
+                        liveCellCount++;
+                    }
+                });
                 const t = this.cells1[index][j];
                 if (liveCellCount < 2) {
                     if (t === 1) {
@@ -263,6 +311,7 @@ class Cgolpitch extends HTMLElement {
         }
         this.resizeGrid();
         this.generationCount++;
+        this.setGenerationCount(this.generationCount);
     }
     // This method creates a 2d number array.
     Create2DArray(height, width) {
@@ -290,7 +339,8 @@ class Cgolpitch extends HTMLElement {
             width = 10;
         }
         this.width = width;
-        this.createGrid();
+        this.shadowRoot.getElementById("width").innerText = String(this.width);
+        this.resizeGrid();
         console.log("Width changed to " + this.width);
     }
     // This method gets the height of the field.
@@ -302,8 +352,9 @@ class Cgolpitch extends HTMLElement {
         if (height < 10) {
             height = 10;
         }
-        this.createGrid();
-        this.width = height;
+        this.height = height;
+        this.shadowRoot.getElementById("height").innerText = String(this.height);
+        this.resizeGrid();
         console.log("Height changed to " + this.height);
     }
 }
