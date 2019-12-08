@@ -53,7 +53,7 @@ class Cgolpitch extends HTMLElement {
                 display: grid;
             }
         </style>
-        <div style="margin:20px;">
+        <div style="margin:10px;">
         <div id="field"></div>
         <button id="start">Start</button>
         <button id="stop">Stop</button>
