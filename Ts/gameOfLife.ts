@@ -249,6 +249,7 @@ class Cgolpitch extends HTMLElement {
 
     // The main game loop.
     private gameLoop(): void {
+        // TODO: Zellen leben oder sterben noch nicht erst für alle überprüfen und ergebnis in neues grid schreiben
         for (let index = 0; index < this.cells1.length; index++) {
             for (let j = 0; j < this.cells1[index].length; j++) {
                 let liveCellCount = 0;
