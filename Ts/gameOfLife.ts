@@ -13,17 +13,21 @@ class Cgolpitch extends HTMLElement {
     // Cells who were alive at one point are 2.
     private cells1: number[][];
 
-    public generationCount: number;
+    // The current generation.
+    private generationCount: number;
 
+    // The interval for the game loop.
     private interv: number;
 
+    // Is true if the grid was initialized.
     private init: boolean;
 
     // The observed attributes.
-    public static get observedAttributes() { return ["width", "height"]; }
-    /**
-     *
-     */
+    public static get observedAttributes() {
+         return ["width", "height"];
+         }
+
+    // The constructor of the element.
     constructor() {
         super();
         this.attachShadow({ mode: 'open' });
@@ -34,7 +38,8 @@ class Cgolpitch extends HTMLElement {
         this.clearGame = this.clearGame.bind(this);
         this.setWidth = this.setWidth.bind(this);
         this.setHeight = this.setHeight.bind(this);
-        this.gameLoop=this.gameLoop.bind(this);
+        this.gameLoop = this.gameLoop.bind(this);
+        this.loadLevel = this.loadLevel.bind(this);
         window.addEventListener("resize", this.onResizeEvent);
         this.generationCount = 0;
         this.init = false;
@@ -77,6 +82,7 @@ class Cgolpitch extends HTMLElement {
         this.shadowRoot.getElementById("clear").addEventListener("click", this.clearGame);
         this.shadowRoot.getElementById("width").addEventListener("change", this.setWidth);
         this.shadowRoot.getElementById("height").addEventListener("change", this.setHeight);
+        this.shadowRoot.getElementById("loadlevel").addEventListener("click", this.loadLevel);
         this.shadowRoot.getElementById("width").innerText = String(this.width);
         this.shadowRoot.getElementById("height").innerText = String(this.height);
 
@@ -104,14 +110,17 @@ class Cgolpitch extends HTMLElement {
         }
     }
 
+    // This method starts or resumes the game loop.
     public startGame(): void {
         this.interv = setInterval(this.gameLoop, 100);
     }
 
+    // This method pauses the game.
     public pauseGame(): void {
         clearInterval(this.interv);
     }
 
+    // This method resets the game.
     public clearGame(): void {
         clearInterval(this.interv);
         this.generationCount = 0;
@@ -119,10 +128,45 @@ class Cgolpitch extends HTMLElement {
         this.createGrid();
     }
 
+    // This method loads the level from the textbox.
     public loadLevel(): void {
-        // Load Level
+        const s = this.shadowRoot.getElementById("level") as HTMLTextAreaElement;
+        const rows = s.value.split("\n");
+        let longestRow = 10;
+        rows.forEach(element => {
+            if (element.length > 10) {
+                longestRow = element.length;
+            }
+        });
+
+        rows.forEach(element => {
+            if (element.length < longestRow) {
+                element = element + "0".repeat(longestRow - element.length);
+            }
+        });
+
+        const arr = this.Create2DArray(this.height, this.width);
+
+        for (let index = 0; index < arr.length; index++) {
+            for (let j = 0; j < arr[index].length; j++) {
+                arr[index][j] = 0;
+            }
+        }
+
+        rows.forEach(element => {
+            let temp = 0;
+            for (let index = 0; index < element.length; index++) {
+                if (element[index] === "1") {
+                    arr[temp][index] = 1;
+                } else{
+                    arr[temp][index] = 0;
+                }
+                
+            }
+        });
     }
 
+    // This method is fired when the window is resized.
     public onResizeEvent(): (this: Window, ev: UIEvent) => any {
         console.log("resize");
 
@@ -168,17 +212,19 @@ class Cgolpitch extends HTMLElement {
         this.init = true;
     }
 
-    private setWidth(event: Event): void{
+    // This method sets the number of columns of the grid.
+    private setWidth(event: Event): void {
         const t = event.target as HTMLInputElement;
         if (isNaN(Number(t.value))) {
             alert("Please put in a number for the width.");
             return;
         }
-        
+
         this.widthProp = Number(t.value);
     }
 
-    private setHeight(event: Event): void{
+    // This method sets the number of columns of the grid.
+    private setHeight(event: Event): void {
         const t = event.target as HTMLInputElement;
         if (isNaN(Number(t.value))) {
             alert("Please put in a number for the height.");
@@ -187,7 +233,8 @@ class Cgolpitch extends HTMLElement {
         this.heightProp = Number(t.value);
     }
 
-    private resizeGrid(): void{
+    // This method resizes the current grid.
+    private resizeGrid(): void {
         const windoWidth = window.innerWidth - 20;
         const windowHeight = window.innerHeight;
         const cellWidth = windoWidth / this.width;
@@ -243,13 +290,21 @@ class Cgolpitch extends HTMLElement {
         console.log(y + " " + x);
     }
 
-    private setGenerationCount(num: number): void{
+    // This method pushes the generation count to the label.
+    private setGenerationCount(num: number): void {
         this.shadowRoot.getElementById("count").innerText = String(this.generationCount);
     }
 
     // The main game loop.
     private gameLoop(): void {
-        // TODO: Zellen leben oder sterben noch nicht erst für alle überprüfen und ergebnis in neues grid schreiben
+        const newArr = this.Create2DArray(this.height, this.width);
+
+        for (let index = 0; index < newArr.length; index++) {
+            for (let j = 0; j < newArr[index].length; j++) {
+                newArr[index][j] = this.cells1[index][j];
+            }
+        }
+
         for (let index = 0; index < this.cells1.length; index++) {
             for (let j = 0; j < this.cells1[index].length; j++) {
                 let liveCellCount = 0;
@@ -265,41 +320,41 @@ class Cgolpitch extends HTMLElement {
 
                 if (index - 1 < 0 && j - 1 < 0) {
                     upperLeft = this.cells1[this.cells1.length - 1][this.cells1[index].length - 1];
-                }else if (index - 1 < 0) {
+                } else if (index - 1 < 0) {
                     upperLeft = this.cells1[this.cells1.length - 1][this.cells1[index].length - 1 - j];
-                }else if (j - 1 < 0) {
+                } else if (j - 1 < 0) {
                     upperLeft = this.cells1[index - 1][this.cells1[index].length - 1];
-                }else{
+                } else {
                     upperLeft = this.cells1[index - 1][j - 1];
                 }
 
                 if (index + 1 > this.cells1.length - 1 && j - 1 < 0) {
                     downerLeft = this.cells1[0][this.cells1[index].length - 1];
-                }else if (index + 1 > this.cells1.length - 1) {
+                } else if (index + 1 > this.cells1.length - 1) {
                     downerLeft = this.cells1[0][this.cells1[index].length - 1 - j];
-                }else if (j - 1 < 0) {
+                } else if (j - 1 < 0) {
                     downerLeft = this.cells1[index + 1][this.cells1[index].length - 1];
-                }else{
+                } else {
                     downerLeft = this.cells1[index + 1][j - 1];
                 }
 
                 if (index - 1 < 0 && j + 1 > this.cells1[index].length - 1) {
                     upperRight = this.cells1[this.cells1.length - 1][0];
-                }else if (index - 1 < 0) {
+                } else if (index - 1 < 0) {
                     upperRight = this.cells1[this.cells1.length - 1][1 + j];
-                }else if (j + 1 > this.cells1[index].length - 1) {
+                } else if (j + 1 > this.cells1[index].length - 1) {
                     upperRight = this.cells1[index - 1][0];
-                }else{
+                } else {
                     upperRight = this.cells1[index - 1][j + 1];
                 }
 
                 if (index + 1 > this.cells1.length - 1 && j + 1 > this.cells1[index].length - 1) {
                     downerRight = this.cells1[0][0];
-                }else if (index + 1 > this.cells1.length - 1) {
+                } else if (index + 1 > this.cells1.length - 1) {
                     downerRight = this.cells1[0][j + 1];
-                }else if (j + 1 > this.cells1[index].length - 1) {
+                } else if (j + 1 > this.cells1[index].length - 1) {
                     downerRight = this.cells1[index + 1][0];
-                }else{
+                } else {
                     downerRight = this.cells1[index + 1][j + 1];
                 }
 
@@ -329,12 +384,12 @@ class Cgolpitch extends HTMLElement {
                     rightNeighbour = this.cells1[index][j + 1];
                 }
 
-                let arrayNeighbour: Number[];
+                let arrayNeighbour: number[];
                 arrayNeighbour = [upperNeighbour, downerNeighbour,
                     leftNeighbour, rightNeighbour, upperLeft, upperRight,
                     downerRight, downerLeft];
 
-                arrayNeighbour.forEach(element => {
+                arrayNeighbour.forEach((element) => {
                     if (element === 1) {
                         liveCellCount++;
                     }
@@ -344,22 +399,23 @@ class Cgolpitch extends HTMLElement {
 
                 if (liveCellCount < 2) {
                     if (t === 1) {
-                        this.cells1[index][j] = 2;
+                        newArr[index][j] = 2;
                     }
                 }
 
                 if (liveCellCount === 3) {
-                    this.cells1[index][j] = 1;
+                    newArr[index][j] = 1;
                 }
 
                 if (liveCellCount > 3) {
                     if (t === 1) {
-                        this.cells1[index][j] = 2;
+                        newArr[index][j] = 2;
                     }
                 }
             }
         }
 
+        this.cells1 = newArr;
         this.resizeGrid();
 
         this.generationCount++;

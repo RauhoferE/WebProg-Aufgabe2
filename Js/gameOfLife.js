@@ -1,8 +1,6 @@
 // The html element.
 class Cgolpitch extends HTMLElement {
-    /**
-     *
-     */
+    // The constructor of the element.
     constructor() {
         super();
         this.attachShadow({ mode: 'open' });
@@ -14,13 +12,16 @@ class Cgolpitch extends HTMLElement {
         this.setWidth = this.setWidth.bind(this);
         this.setHeight = this.setHeight.bind(this);
         this.gameLoop = this.gameLoop.bind(this);
+        this.loadLevel = this.loadLevel.bind(this);
         window.addEventListener("resize", this.onResizeEvent);
         this.generationCount = 0;
         this.init = false;
         console.log("cgol initialised");
     }
     // The observed attributes.
-    static get observedAttributes() { return ["width", "height"]; }
+    static get observedAttributes() {
+        return ["width", "height"];
+    }
     // This method is called when the website has been loaded.
     connectedCallback() {
         this.width = +this.getAttribute("width");
@@ -56,6 +57,7 @@ class Cgolpitch extends HTMLElement {
         this.shadowRoot.getElementById("clear").addEventListener("click", this.clearGame);
         this.shadowRoot.getElementById("width").addEventListener("change", this.setWidth);
         this.shadowRoot.getElementById("height").addEventListener("change", this.setHeight);
+        this.shadowRoot.getElementById("loadlevel").addEventListener("click", this.loadLevel);
         this.shadowRoot.getElementById("width").innerText = String(this.width);
         this.shadowRoot.getElementById("height").innerText = String(this.height);
         this.createGrid();
@@ -77,21 +79,55 @@ class Cgolpitch extends HTMLElement {
             this.heightProp = +newVal;
         }
     }
+    // This method starts or resumes the game loop.
     startGame() {
         this.interv = setInterval(this.gameLoop, 100);
     }
+    // This method pauses the game.
     pauseGame() {
         clearInterval(this.interv);
     }
+    // This method resets the game.
     clearGame() {
         clearInterval(this.interv);
         this.generationCount = 0;
         this.setGenerationCount(this.generationCount);
         this.createGrid();
     }
+    // This method loads the level from the textbox.
     loadLevel() {
-        // Load Level
+        const s = this.shadowRoot.getElementById("level");
+        const rows = s.value.split("\n");
+        let longestRow = 10;
+        rows.forEach(element => {
+            if (element.length > 10) {
+                longestRow = element.length;
+            }
+        });
+        rows.forEach(element => {
+            if (element.length < longestRow) {
+                element = element + "0".repeat(longestRow - element.length);
+            }
+        });
+        const arr = this.Create2DArray(this.height, this.width);
+        for (let index = 0; index < arr.length; index++) {
+            for (let j = 0; j < arr[index].length; j++) {
+                arr[index][j] = 0;
+            }
+        }
+        rows.forEach(element => {
+            let temp = 0;
+            for (let index = 0; index < element.length; index++) {
+                if (element[index] === "1") {
+                    arr[temp][index] = 1;
+                }
+                else {
+                    arr[temp][index] = 0;
+                }
+            }
+        });
     }
+    // This method is fired when the window is resized.
     onResizeEvent() {
         console.log("resize");
         this.resizeGrid();
@@ -128,6 +164,7 @@ class Cgolpitch extends HTMLElement {
         }
         this.init = true;
     }
+    // This method sets the number of columns of the grid.
     setWidth(event) {
         const t = event.target;
         if (isNaN(Number(t.value))) {
@@ -136,6 +173,7 @@ class Cgolpitch extends HTMLElement {
         }
         this.widthProp = Number(t.value);
     }
+    // This method sets the number of columns of the grid.
     setHeight(event) {
         const t = event.target;
         if (isNaN(Number(t.value))) {
@@ -144,6 +182,7 @@ class Cgolpitch extends HTMLElement {
         }
         this.heightProp = Number(t.value);
     }
+    // This method resizes the current grid.
     resizeGrid() {
         const windoWidth = window.innerWidth - 20;
         const windowHeight = window.innerHeight;
@@ -195,11 +234,18 @@ class Cgolpitch extends HTMLElement {
         }
         console.log(y + " " + x);
     }
+    // This method pushes the generation count to the label.
     setGenerationCount(num) {
         this.shadowRoot.getElementById("count").innerText = String(this.generationCount);
     }
     // The main game loop.
     gameLoop() {
+        const newArr = this.Create2DArray(this.height, this.width);
+        for (let index = 0; index < newArr.length; index++) {
+            for (let j = 0; j < newArr[index].length; j++) {
+                newArr[index][j] = this.cells1[index][j];
+            }
+        }
         for (let index = 0; index < this.cells1.length; index++) {
             for (let j = 0; j < this.cells1[index].length; j++) {
                 let liveCellCount = 0;
@@ -288,7 +334,7 @@ class Cgolpitch extends HTMLElement {
                 arrayNeighbour = [upperNeighbour, downerNeighbour,
                     leftNeighbour, rightNeighbour, upperLeft, upperRight,
                     downerRight, downerLeft];
-                arrayNeighbour.forEach(element => {
+                arrayNeighbour.forEach((element) => {
                     if (element === 1) {
                         liveCellCount++;
                     }
@@ -296,19 +342,20 @@ class Cgolpitch extends HTMLElement {
                 const t = this.cells1[index][j];
                 if (liveCellCount < 2) {
                     if (t === 1) {
-                        this.cells1[index][j] = 2;
+                        newArr[index][j] = 2;
                     }
                 }
                 if (liveCellCount === 3) {
-                    this.cells1[index][j] = 1;
+                    newArr[index][j] = 1;
                 }
                 if (liveCellCount > 3) {
                     if (t === 1) {
-                        this.cells1[index][j] = 2;
+                        newArr[index][j] = 2;
                     }
                 }
             }
         }
+        this.cells1 = newArr;
         this.resizeGrid();
         this.generationCount++;
         this.setGenerationCount(this.generationCount);
