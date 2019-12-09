@@ -34,7 +34,7 @@ class Cgolpitch extends HTMLElement {
                 display: grid;
             }
         </style>
-        <div style="margin:10px;">
+        <div style="margin:20px;">
         <div id="field"></div>
         <button id="start">Start</button>
         <button id="stop">Stop</button>
@@ -47,7 +47,7 @@ class Cgolpitch extends HTMLElement {
         <span>Height: </span>
         <textarea id="height" ></textarea>
         <span>Level: </span>
-        <textarea id="level" cols="${this.width}"></textarea>
+        <textarea id="level" cols="60"></textarea>
         </div>
         <button id="loadlevel">Load Level</button>
         </div>
@@ -99,33 +99,49 @@ class Cgolpitch extends HTMLElement {
         const s = this.shadowRoot.getElementById("level");
         const rows = s.value.split("\n");
         let longestRow = 10;
+        let height = 10;
+        let currentHeight = 0;
         rows.forEach(element => {
+            currentHeight++;
             if (element.length > 10) {
                 longestRow = element.length;
             }
         });
+        if (currentHeight > height) {
+            height = currentHeight;
+        }
         rows.forEach(element => {
             if (element.length < longestRow) {
                 element = element + "0".repeat(longestRow - element.length);
             }
         });
-        const arr = this.Create2DArray(this.height, this.width);
+        if (rows.length < height) {
+            for (let r = rows.length; r < height; r++) {
+                rows.push("0".repeat(longestRow));
+            }
+        }
+        const arr = this.Create2DArray(height, longestRow);
         for (let index = 0; index < arr.length; index++) {
             for (let j = 0; j < arr[index].length; j++) {
                 arr[index][j] = 0;
             }
         }
+        let temp = 0;
         rows.forEach(element => {
-            let temp = 0;
             for (let index = 0; index < element.length; index++) {
-                if (element[index] === "1") {
+                if (element.charAt(index) === "1") {
                     arr[temp][index] = 1;
                 }
                 else {
                     arr[temp][index] = 0;
                 }
             }
+            temp++;
         });
+        this.cells1 = arr;
+        this.width = longestRow;
+        this.height = height;
+        this.resizeGrid();
     }
     // This method is fired when the window is resized.
     onResizeEvent() {
@@ -137,7 +153,7 @@ class Cgolpitch extends HTMLElement {
     createGrid() {
         console.log("CreateGrid");
         this.cells = this.Create2DArray(this.height, this.width);
-        const windoWidth = window.innerWidth - 20;
+        const windoWidth = window.innerWidth - 40;
         const windowHeight = window.innerHeight;
         const cellWidth = windoWidth / this.width;
         const container = this.shadowRoot.getElementById("field");
@@ -184,7 +200,7 @@ class Cgolpitch extends HTMLElement {
     }
     // This method resizes the current grid.
     resizeGrid() {
-        const windoWidth = window.innerWidth - 20;
+        const windoWidth = window.innerWidth - 40;
         const windowHeight = window.innerHeight;
         const cellWidth = windoWidth / this.width;
         const container = this.shadowRoot.getElementById("field");
@@ -354,6 +370,19 @@ class Cgolpitch extends HTMLElement {
                     }
                 }
             }
+        }
+        let areEqual = true;
+        for (let index = 0; index < newArr.length; index++) {
+            for (let j = 0; j < newArr[index].length; j++) {
+                if (newArr[index][j] !== this.cells1[index][j]) {
+                    areEqual = false;
+                    break;
+                }
+            }
+        }
+        if (areEqual && this.generationCount !== 0) {
+            this.pauseGame();
+            return;
         }
         this.cells1 = newArr;
         this.resizeGrid();
