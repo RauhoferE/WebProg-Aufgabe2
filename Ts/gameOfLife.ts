@@ -22,6 +22,18 @@ class Cgolpitch extends HTMLElement {
     // Is true if the grid was initialized.
     private init: boolean;
 
+    // The color of dead cells.
+    private colorDeadcells: string;
+
+    // The color of live cells.
+    private colorLiveCells: string;
+
+    // The color of cells who died.
+    private colorCellsWhoDied: string;
+
+    // The audio played on the website.
+    private audioElement = new Audio("mp3/Chad_Crouch_-_Algorithms.mp3");
+
     // The observed attributes.
     public static get observedAttributes() {
          return ["width", "height"];
@@ -30,7 +42,7 @@ class Cgolpitch extends HTMLElement {
     // The constructor of the element.
     constructor() {
         super();
-        this.attachShadow({ mode: 'open' });
+        this.attachShadow({ mode: "open" });
         this.mouseOverDiv = this.mouseOverDiv.bind(this);
         this.onResizeEvent = this.onResizeEvent.bind(this);
         this.startGame = this.startGame.bind(this);
@@ -40,18 +52,22 @@ class Cgolpitch extends HTMLElement {
         this.setHeight = this.setHeight.bind(this);
         this.gameLoop = this.gameLoop.bind(this);
         this.loadLevel = this.loadLevel.bind(this);
+        this.changeColorSpectrum01 = this.changeColorSpectrum01.bind(this);
+        this.changeColorSpectrum02 = this.changeColorSpectrum02.bind(this);
+        this.randomiseArray = this.randomiseArray.bind(this);
         window.addEventListener("resize", this.onResizeEvent);
         this.generationCount = 0;
         this.init = false;
-        console.log("cgol initialised");
+        this.colorDeadcells = "white";
+        this.colorLiveCells = "black";
+        this.colorCellsWhoDied = "green";
     }
 
     // This method is called when the website has been loaded.
     public connectedCallback(): void {
         this.width = +this.getAttribute("width");
         this.height = +this.getAttribute("height");
-        console.log(this.width);
-        console.log(this.height);
+
         this.shadowRoot.innerHTML = `
         <style>
             #field{
@@ -74,6 +90,9 @@ class Cgolpitch extends HTMLElement {
         <textarea id="level" cols="60"></textarea>
         </div>
         <button id="loadlevel">Load Level</button>
+        <button id="changeColor01">Change Color to #1</button>
+        <button id="changeColor02">Change Color to #2</button>
+        <button id="randomise">Randomise Cells</button>
         </div>
         `
             ;
@@ -83,22 +102,18 @@ class Cgolpitch extends HTMLElement {
         this.shadowRoot.getElementById("width").addEventListener("change", this.setWidth);
         this.shadowRoot.getElementById("height").addEventListener("change", this.setHeight);
         this.shadowRoot.getElementById("loadlevel").addEventListener("click", this.loadLevel);
+        this.shadowRoot.getElementById("changeColor01").addEventListener("click", this.changeColorSpectrum01);
+        this.shadowRoot.getElementById("changeColor02").addEventListener("click", this.changeColorSpectrum02);
+        this.shadowRoot.getElementById("randomise").addEventListener("click", this.randomiseArray);
         this.shadowRoot.getElementById("width").innerText = String(this.width);
         this.shadowRoot.getElementById("height").innerText = String(this.height);
 
         this.createGrid();
     }
 
-    // This method is called when the website has been disconnected.
-    public disconnectedCallback(): void {
-        console.log("Disconnected");
-    }
-
     // This method is called when a attribute has been changed.
     public attributeChangedCallback(attrName: string, oldVal: string, newVal: string): void {
         if (this.init === false) {
-            console.log("not initialised");
-
             return;
         }
 
@@ -111,11 +126,14 @@ class Cgolpitch extends HTMLElement {
 
     // This method starts or resumes the game loop.
     public startGame(): void {
+        this.audioElement.play();
         this.interv = setInterval(this.gameLoop, 100);
     }
 
     // This method pauses the game.
     public pauseGame(): void {
+        this.audioElement.pause();
+        this.audioElement.currentTime = 0;
         clearInterval(this.interv);
     }
 
@@ -129,13 +147,16 @@ class Cgolpitch extends HTMLElement {
 
     // This method loads the level from the textbox.
     public loadLevel(): void {
+        this.pauseGame();
+        this.audioElement.pause();
+        this.audioElement.currentTime = 0;
         const s = this.shadowRoot.getElementById("level") as HTMLTextAreaElement;
         const rows = s.value.split("\n");
         let longestRow = 10;
         let height = 10;
         let currentHeight = 0;
 
-        rows.forEach(element => {
+        rows.forEach((element) => {
             currentHeight++;
             if (element.length > 10) {
                 longestRow = element.length;
@@ -146,14 +167,14 @@ class Cgolpitch extends HTMLElement {
             height = currentHeight;
         }
 
-        rows.forEach(element => {
+        rows.forEach((element)  => {
             if (element.length < longestRow) {
                 element = element + "0".repeat(longestRow - element.length);
             }
         });
 
         if (rows.length < height) {
-            for (let r = rows.length; r < height; r++){
+            for (let r = rows.length; r < height; r++) {
                 rows.push("0".repeat(longestRow));
             }
         }
@@ -167,11 +188,11 @@ class Cgolpitch extends HTMLElement {
         }
 
         let temp = 0;
-        rows.forEach(element => {
+        rows.forEach((element)  => {
             for (let index = 0; index < element.length; index++) {
                 if (element.charAt(index) === "1") {
                     arr[temp][index] = 1;
-                } else{
+                } else {
                     arr[temp][index] = 0;
                 }
             }
@@ -186,16 +207,12 @@ class Cgolpitch extends HTMLElement {
 
     // This method is fired when the window is resized.
     public onResizeEvent(): (this: Window, ev: UIEvent) => any {
-        console.log("resize");
-
         this.resizeGrid();
         return;
     }
 
     // This method creates a dom grid.
     private createGrid(): void {
-        console.log("CreateGrid");
-
         this.cells = this.Create2DArray(this.height, this.width);
         const windoWidth = window.innerWidth - 40;
         const windowHeight = window.innerHeight;
@@ -219,6 +236,7 @@ class Cgolpitch extends HTMLElement {
                 temp.style.border = "1px solid #0000FF";
                 temp.style.width = "100%";
                 temp.style.height = "100%";
+                temp.style.backgroundColor = this.colorDeadcells;
                 temp.setAttribute("PosY", index.toString());
                 temp.setAttribute("PosX", j.toString());
                 this.cells[index][j] = 0;
@@ -277,11 +295,11 @@ class Cgolpitch extends HTMLElement {
                 temp.setAttribute("PosY", index.toString());
                 temp.setAttribute("PosX", j.toString());
                 if (this.cells1[index][j] === 0) {
-                    temp.style.backgroundColor = "white";
+                    temp.style.backgroundColor = this.colorDeadcells;
                 } else if (this.cells1[index][j] === 1) {
-                    temp.style.backgroundColor = "black";
+                    temp.style.backgroundColor = this.colorLiveCells;
                 } else {
-                    temp.style.backgroundColor = "green";
+                    temp.style.backgroundColor = this.colorCellsWhoDied;
                 }
                 temp.addEventListener("click", this.mouseOverDiv);
                 container.appendChild(temp);
@@ -299,13 +317,11 @@ class Cgolpitch extends HTMLElement {
 
         if (this.cells[Number(y)][Number(x)] === 0) {
             this.cells[Number(y)][Number(x)] = 1;
-            t.style.backgroundColor = "black";
+            t.style.backgroundColor = this.colorLiveCells;
         } else {
             this.cells[Number(y)][Number(x)] = 0;
-            t.style.backgroundColor = "white";
+            t.style.backgroundColor = this.colorDeadcells;
         }
-
-        console.log(y + " " + x);
     }
 
     // This method pushes the generation count to the label.
@@ -467,6 +483,40 @@ class Cgolpitch extends HTMLElement {
         return arr;
     }
 
+    // This method randomises the cells.
+    private randomiseArray(): void {
+        this.pauseGame();
+        const c = this.Create2DArray(this.heightProp, this.widthProp);
+
+        for (let index = 0; index < c.length; index++) {
+            for (let index2 = 0; index2 < c[index].length; index2++) {
+                const val = Math.round(Math.random());
+                c[index][index2] = val;
+            }
+        }
+
+        this.cells1 = c;
+        this.resizeGrid();
+    }
+
+    // This method changes the color spectrum.
+    private changeColorSpectrum01(): void {
+        this.pauseGame();
+        this.colorDeadcells = "#64E84A";
+        this.colorLiveCells = "#52FFCE";
+        this.colorCellsWhoDied = "#52D1FF";
+        this.resizeGrid();
+    }
+
+    // This method also changes the color spectrum.
+    private changeColorSpectrum02(): void {
+        this.pauseGame();
+        this.colorDeadcells = "white";
+        this.colorLiveCells = "black";
+        this.colorCellsWhoDied = "green";
+        this.resizeGrid();
+    }
+
     // This method gets the number array.
     public get cells(): number[][] {
         return this.cells1;
@@ -491,7 +541,6 @@ class Cgolpitch extends HTMLElement {
         this.width = width;
         this.shadowRoot.getElementById("width").innerText = String(this.width);
         this.resizeGrid();
-        console.log("Width changed to " + this.width);
     }
 
     // This method gets the height of the field.
@@ -508,7 +557,6 @@ class Cgolpitch extends HTMLElement {
         this.height = height;
         this.shadowRoot.getElementById("height").innerText = String(this.height);
         this.resizeGrid();
-        console.log("Height changed to " + this.height);
     }
 }
 
