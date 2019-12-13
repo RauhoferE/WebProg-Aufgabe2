@@ -23,7 +23,7 @@ async function tsFunc(){
 
 
 function html() {
-  return src('docs/*.html')
+  return src('*.html')
 	.pipe(debug({title: 'html:'}))
 	.pipe(htmlhint())
 	.pipe(htmlhint.failOnError())
