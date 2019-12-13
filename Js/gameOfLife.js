@@ -31,6 +31,7 @@ class Cgolpitch extends HTMLElement {
     }
     // This method is called when the website has been loaded.
     connectedCallback() {
+        console.log("Yes");
         this.width = +this.getAttribute("width");
         this.height = +this.getAttribute("height");
         this.shadowRoot.innerHTML = `
