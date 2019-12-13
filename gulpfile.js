@@ -15,8 +15,9 @@ var ts = require('gulp-typescript');
 async function tsFunc(){
   return src('src/*.ts')
   .pipe(ts({
+      target:"es2020",
       noImplicitAny: true,
-      outFile: 'output.js'
+      outFile: 'gameOfLife.js'
   }))
   .pipe(dest('dist'));
 }
