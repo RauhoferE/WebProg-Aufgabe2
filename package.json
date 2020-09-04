@@ -10,7 +10,7 @@
     "gulp-sass": "^4.0.2",
     "gulp-typescript": "^6.0.0-alpha.1",
     "gulp-uncomment": "^0.3.0",
-    "node-sass": "^4.13.0",
+    "node-sass": "^4.13.1",
     "ts-lint": "^4.5.1",
     "ts-node": "^8.5.4",
     "tslint": "^5.20.1",
